@@ -51,23 +51,6 @@ if ! [[ -f jmxtrans-20120525-210643-4e956b1144.zip ]]; then
 fi
 FILES="jmxtrans-20120525-210643-4e956b1144.zip $FILES"
 
-# Fetch MySQL connector
-if ! [[ -f mysql-connector-java-5.1.34.tar.gz ]]; then
-  $CURL -O -L http://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.34.tar.gz
-fi
-FILES="mysql-connector-java-5.1.34.tar.gz $FILES"
-
-# Fetch Kafka Tar
-for version in 0.8.1 0.8.1.1; do
-  mkdir -p kafka/${version}/
-  if ! [[ -f kafka/${version}/kafka_2.9.2-${version}.tgz ]]; then
-    pushd kafka/${version}/
-    $CURL -O -L https://archive.apache.org/dist/kafka/${version}/kafka_2.9.2-${version}.tgz
-    popd
-  fi
-  FILES="kafka_2.9.2-${version}.tgz $FILES"
-done
-
 # Fetch Java Tar
 if ! [[ -f jdk-7u51-linux-x64.tar.gz ]]; then
   $CURL -O -L -C - -b "oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/7u51-b13/jdk-7u51-linux-x64.tar.gz   
@@ -84,7 +67,7 @@ if ! [[ -f jce_policy-8.zip ]]; then
 fi
 FILES="jce_policy-8.zip $FILES"
 
-# Pull all the gems required for the cluster 
+# Pull all the gems required for the cluster
 for i in patron wmi-lite simple-graphite; do
   if ! [[ -f gems/${i}.gem ]]; then
     gem fetch ${i}
@@ -100,33 +83,12 @@ if ! [[ -f gems/zookeeper.gem ]]; then
 fi
 FILES="zookeeper*.gem $FILES"
 
-# Get the Rubygem for kerberos
-if ! [[ -f gems/rake-compiler.gem ]]; then
-  gem fetch rake-compiler
-  ln -s rake-compiler*.gem rake-compiler.gem || true
-fi
-FILES="rake-compiler*.gem $FILES"
-
-# Get the Rubygem for kerberos
-if ! [[ -f gems/rkerberos.gem ]]; then
-  gem fetch rkerberos
-  ln -s rkerberos*.gem rkerberos.gem || true
-fi
-FILES="rkerberos*.gem $FILES"
-
 # Get Rubygem for zabbixapi
 if ! [[ -f gems/zabbixapi.gem ]]; then
   gem fetch zabbixapi -v ${ZABBIX_VERSION}
   ln -s zabbix*.gem zabbixapi.gem || true
 fi
 FILES="zabbix*.gem $FILES"
-
-# Get the Rubygem for webhdfs
-if ! [[ -f gems/webhdfs.gem ]]; then
-  gem fetch webhdfs -v 0.5.5
-  ln -s webhdfs-*.gem webhdfs.gem || true
-fi
-FILES="webhdfs*.gem $FILES"
 
 # Fetch the cirros image for testing
 if ! [[ -f cirros-0.3.0-x86_64-disk.img ]]; then
@@ -141,19 +103,6 @@ if ! [[ -f ubuntu-12.04-mini.iso ]]; then
   $CURL -o ubuntu-12.04-mini.iso http://archive.ubuntu.com/ubuntu/dists/precise/main/installer-amd64/current/images/netboot/mini.iso
 fi
 FILES="ubuntu-12.04-mini.iso $FILES"
-
-# Make the diamond package
-if ! [[ -f diamond.deb ]]; then
-  git clone https://github.com/BrightcoveOS/Diamond.git
-  pushd Diamond
-  git checkout $VER_DIAMOND
-  make builddeb
-  VERSION=`cat version.txt`
-  popd
-  mv Diamond/build/diamond_${VERSION}_all.deb diamond.deb
-  rm -rf Diamond
-fi
-FILES="diamond.deb $FILES"
 
 # Fetch pyrabbit
 if ! [[ -f python/pyrabbit-1.0.1.tar.gz ]]; then
@@ -267,8 +216,8 @@ chmod -R 755 .
 # "/usr/bin/pip install: error: no such option: --no-use-wheel"
 if ! hash dir2pi; then
   /usr/bin/pip install pip2pi || /bin/true
-  /usr/local/bin/pip install setuptools --no-use-wheel --upgrade
-  /usr/local/bin/pip install pip2pi
+  /usr/local/bin/pip --cert cacert.pem install setuptools --no-use-wheel --upgrade
+  /usr/local/bin/pip --cert cacert.pem install pip2pi
 fi
 
 dir2pi python

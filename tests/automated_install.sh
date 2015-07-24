@@ -20,8 +20,8 @@ if [[ "$(pwd)" != "$(git rev-parse --show-toplevel)" ]]; then
 fi
 
 ENVIRONMENT=Test-Laptop
-#PROXY=proxy.example.com:80
-DNS_SERVERS='"8.8.8.8", "8.8.4.4"'
+PROXY=proxy.bloomberg.com:81
+DNS_SERVERS='"160.43.8.240", "160.43.8.220"'
 export BOOTSTRAP_VM_MEM=3096
 export BOOTSTRAP_VM_CPUs=2
 export CLUSTER_VM_MEM=5120
@@ -49,7 +49,7 @@ install_cluster || ( echo "############## VBOX CREATE INSTALL CLUSTER RETURNED $
 printf "#### Cobbler Boot\n"
 printf "Snapshotting pre-Cobbler and booting (unless already running)\n"
 vms_started="False"
-for i in 1 2 3; do
+for i in 1 2 3 4; do
   vboxmanage showvminfo bcpc-vm$i | grep -q '^State:.*running' || vms_started="True"
   vboxmanage showvminfo bcpc-vm$i | grep -q '^State:.*running' || VBoxManage snapshot bcpc-vm$i take Shoe-less
   vboxmanage showvminfo bcpc-vm$i | grep -q '^State:.*running' || VBoxManage startvm bcpc-vm$i --type headless
@@ -58,11 +58,12 @@ done
 printf "Checking VMs are up: \n"
 while ! nc -w 1 10.0.100.11 22 || \
          !  nc -w 1 10.0.100.12 22 || \
-         !  nc -w 1 10.0.100.13 22
+         !  nc -w 1 10.0.100.13 22 || \
+         !  nc -w 1 10.0.100.14 22
 do
   sleep 60
   printf "Hosts down: "
-  for m in 11 12 13; do
+  for m in 11 12 13 14; do
     nc -w 1 10.0.100.$m 22 > /dev/null || echo -n "10.0.100.$m "
   done
   printf "\n"
@@ -72,14 +73,16 @@ printf "Snapshotting post-Cobbler\n"
 [[ "$vms_started" == "True" ]] && VBoxManage snapshot bcpc-vm1 take Post-Cobble
 [[ "$vms_started" == "True" ]] && VBoxManage snapshot bcpc-vm2 take Post-Cobble
 [[ "$vms_started" == "True" ]] && VBoxManage snapshot bcpc-vm3 take Post-Cobble
+[[ "$vms_started" == "True" ]] && VBoxManage snapshot bcpc-vm4 take Post-Cobble
 
 printf "#### Chef all the nodes\n"
 vagrant ssh -c "sudo apt-get install -y sshpass"
 
-printf "#### Chef machine bcpc-vms\n"
-vagrant ssh -c "cd chef-bcpc; ./cluster-assign-roles.sh $ENVIRONMENT Hadoop"
+#printf "#### Chef machine bcpc-vms\n"
+#vagrant ssh -c "cd chef-bcpc; ./cluster-assign-roles.sh $ENVIRONMENT Hadoop"
 
 printf "Snapshotting post-Cobbler\n"
 VBoxManage snapshot bcpc-vm1 take Full-Shoes
 VBoxManage snapshot bcpc-vm2 take Full-Shoes
 VBoxManage snapshot bcpc-vm3 take Full-Shoes
+VBoxManage snapshot bcpc-vm4 take Full-Shoes

@@ -82,22 +82,11 @@ end
 # bag: databag name of chef vault item; 
 # item: chef vault item; 
 # key: the key to retrieve password in the item
-def get_config(key, item=node.chef_environment, bag="configs")
-  require 'chef-vault'
-  begin
-    entry = ChefVault::Item.load(bag, item)
-    return entry[key]
-  rescue ChefVault::Exceptions::KeysNotFound
-    if bag != "configs"
-      entry = Chef::DataBagItem.load(bag,item)
-      return entry[key]
-    else
+def get_config(key)
       init_config if $dbi.nil?
       Chef::Log.info  "------------ Fetching value for key \"#{key}\""
       value = node['bcpc']['encrypt_data_bag'] ? $edbi[key] : $dbi[key]
       return value
-    end
-  end
 end
 
 def get_config!(key)
