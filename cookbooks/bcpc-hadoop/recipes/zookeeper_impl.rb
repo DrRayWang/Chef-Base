@@ -23,8 +23,8 @@ end
 ruby_block "Compare_zookeeper_server_start_shell_script" do
   block do
     require "digest"
-    orig_checksum=Digest::MD5.hexdigest(File.read("/tmp/zkServer.sh"))
-    new_checksum=Digest::MD5.hexdigest(File.read("/usr/hdp/2.2.0.0-2041/zookeeper/bin/zkServer.sh"))
+    orig_checksum = Digest::SHA2.new(512).hexdigest(File.read("/tmp/zkServer.sh"))
+    new_checksum  = Digest::SHA2.new(512).hexdigest(File.read("/usr/hdp/2.2.0.0-2041/zookeeper/bin/zkServer.sh"))
     if orig_checksum != new_checksum
       Chef::Application.fatal!("zookeeper-server:New version of zkServer.sh need to be created and used")
     end
